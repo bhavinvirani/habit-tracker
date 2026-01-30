@@ -14,18 +14,24 @@ interface HabitWithStats extends Habit {
 }
 
 interface TodayHabit extends Habit {
-  completed: boolean;
-  log: HabitLog | null;
+  isCompleted: boolean;
+  logValue: number | null;
+  logNotes: string | null;
+  logId: string | null;
   currentStreak: number;
+  longestStreak: number;
+  targetValue: number | null;
+  unit: string | null;
+  habitType: string;
 }
 
 interface TodayResponse {
   date: string;
   habits: TodayHabit[];
-  stats: {
+  summary: {
     total: number;
     completed: number;
-    percentage: number;
+    remaining: number;
   };
 }
 
@@ -125,11 +131,14 @@ export const trackingApi = {
     return response.data.data;
   },
 
-  checkIn: async (habitId: string, data?: { notes?: string; date?: string }): Promise<HabitLog> => {
-    const response = await api.post<ApiResponse<{ log: HabitLog }>>(
-      `/tracking/check-in`,
-      { habitId, ...data }
-    );
+  checkIn: async (
+    habitId: string,
+    data?: { notes?: string; date?: string; value?: number; completed?: boolean }
+  ): Promise<HabitLog> => {
+    const response = await api.post<ApiResponse<{ log: HabitLog }>>(`/tracking/check-in`, {
+      habitId,
+      ...data,
+    });
     return response.data.data.log;
   },
 

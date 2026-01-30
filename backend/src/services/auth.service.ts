@@ -65,6 +65,8 @@ export async function register(data: RegisterInput): Promise<AuthResponse> {
     },
   });
 
+  // New users start with a clean slate - they can use templates to create habits
+
   const token = generateToken(user.id);
 
   logger.info('User registered', { userId: user.id, email: user.email });

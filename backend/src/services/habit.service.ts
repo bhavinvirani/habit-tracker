@@ -35,23 +35,29 @@ export async function createHabit(
   });
   const nextSortOrder = (maxOrderResult._max.sortOrder ?? -1) + 1;
 
+  const habitData: Prisma.HabitCreateInput = {
+    user: { connect: { id: userId } },
+    name: data.name,
+    description: data.description,
+    frequency: data.frequency as Frequency,
+    daysOfWeek: data.daysOfWeek ?? [],
+    timesPerWeek: data.timesPerWeek,
+    habitType: (data.habitType as HabitType) || 'BOOLEAN',
+    targetValue: data.targetValue,
+    unit: data.unit,
+    color: data.color,
+    icon: data.icon,
+    category: data.category,
+    sortOrder: nextSortOrder,
+  };
+
+  // Only connect template if templateId is provided
+  if (templateId) {
+    habitData.template = { connect: { id: templateId } };
+  }
+
   const habit = await prisma.habit.create({
-    data: {
-      userId,
-      name: data.name,
-      description: data.description,
-      frequency: data.frequency as Frequency,
-      daysOfWeek: data.daysOfWeek ?? [],
-      timesPerWeek: data.timesPerWeek,
-      habitType: data.habitType as HabitType,
-      targetValue: data.targetValue,
-      unit: data.unit,
-      color: data.color,
-      icon: data.icon,
-      category: data.category,
-      sortOrder: nextSortOrder,
-      templateId,
-    },
+    data: habitData,
   });
 
   logger.info('Habit created', { habitId: habit.id, userId, name: habit.name });

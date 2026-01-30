@@ -1,15 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  CheckCircle2,
-  Target,
-  Flame,
-  TrendingUp,
-  Calendar,
-  Loader2,
-  Plus,
-  Sparkles,
-} from 'lucide-react';
+import { CheckCircle2, Flame, TrendingUp, Calendar, Loader2, Plus, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { trackingApi, analyticsApi } from '../services/habits';
@@ -31,12 +22,25 @@ const Dashboard: React.FC = () => {
     queryFn: analyticsApi.getOverview,
   });
 
-  // Check-in mutation
+  // Check-in mutation for habits with target values (increments value)
   const checkInMutation = useMutation({
-    mutationFn: (habitId: string) => trackingApi.checkIn(habitId),
-    onSuccess: () => {
+    mutationFn: ({
+      habitId,
+      value,
+      completed,
+    }: {
+      habitId: string;
+      value?: number;
+      completed?: boolean;
+    }) => trackingApi.checkIn(habitId, { value, completed }),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['today'] });
       queryClient.invalidateQueries({ queryKey: ['overview'] });
+      if (variables.completed) {
+        toast.success('Habit completed! 🎉');
+      } else {
+        toast.success('Progress updated! 💪');
+      }
     },
     onError: () => {
       toast.error('Failed to check in');
@@ -49,17 +53,44 @@ const Dashboard: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['today'] });
       queryClient.invalidateQueries({ queryKey: ['overview'] });
+      toast.success('Check-in undone');
     },
     onError: () => {
       toast.error('Failed to undo check-in');
     },
   });
 
-  const handleToggle = (habitId: string, completed: boolean) => {
-    if (completed) {
-      undoMutation.mutate(habitId);
+  // Handle habit click - increment for numeric habits, toggle for boolean
+  const handleHabitClick = (habit: {
+    id: string;
+    isCompleted: boolean;
+    targetValue: number | null;
+    logValue: number | null;
+    habitType: string;
+  }) => {
+    const hasGoal = habit.targetValue && habit.targetValue > 0;
+    const currentValue = habit.logValue || 0;
+    const targetValue = habit.targetValue || 1;
+    const isFullyComplete = habit.isCompleted || (hasGoal && currentValue >= targetValue);
+
+    if (isFullyComplete) {
+      // Undo the check-in
+      undoMutation.mutate(habit.id);
+    } else if (hasGoal && habit.habitType !== 'BOOLEAN') {
+      // Increment value by 1
+      const newValue = currentValue + 1;
+      const willComplete = newValue >= targetValue;
+      checkInMutation.mutate({
+        habitId: habit.id,
+        value: newValue,
+        completed: willComplete,
+      });
     } else {
-      checkInMutation.mutate(habitId);
+      // Boolean habit - just mark complete
+      checkInMutation.mutate({
+        habitId: habit.id,
+        completed: true,
+      });
     }
   };
 
@@ -74,9 +105,9 @@ const Dashboard: React.FC = () => {
   }
 
   const habits = todayData?.habits || [];
-  const completedCount = todayData?.stats?.completed || 0;
-  const totalCount = todayData?.stats?.total || 0;
-  const percentage = todayData?.stats?.percentage || 0;
+  const completedCount = todayData?.summary?.completed || 0;
+  const totalCount = todayData?.summary?.total || 0;
+  const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className="space-y-8">
@@ -92,44 +123,84 @@ const Dashboard: React.FC = () => {
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <span className="stat-label">Today's Progress</span>
-            <Target className="w-5 h-5 text-primary-400" />
+      {/* Today's Progress Ring + Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Progress Ring */}
+        <div className="lg:col-span-2 card flex flex-col items-center justify-center py-8">
+          <div className="relative w-40 h-40">
+            {/* Background circle */}
+            <svg className="w-full h-full transform -rotate-90">
+              <circle
+                cx="80"
+                cy="80"
+                r="70"
+                stroke="currentColor"
+                strokeWidth="12"
+                fill="none"
+                className="text-dark-700"
+              />
+              {/* Progress circle */}
+              <circle
+                cx="80"
+                cy="80"
+                r="70"
+                stroke="url(#progressGradient)"
+                strokeWidth="12"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 70}
+                strokeDashoffset={2 * Math.PI * 70 * (1 - percentage / 100)}
+                className="transition-all duration-700 ease-out"
+              />
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#22c55e" />
+                </linearGradient>
+              </defs>
+            </svg>
+            {/* Center text */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-4xl font-bold text-white">{percentage}%</span>
+              <span className="text-sm text-dark-400">complete</span>
+            </div>
           </div>
-          <p className="stat-value text-primary-400">{percentage}%</p>
-          <p className="text-sm text-dark-500">
-            {completedCount} of {totalCount} completed
-          </p>
+          <div className="mt-4 text-center">
+            <p className="text-lg font-semibold text-white">Today's Progress</p>
+            <p className="text-dark-400">
+              {completedCount} of {totalCount} habits done
+            </p>
+          </div>
         </div>
 
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <span className="stat-label">Current Streak</span>
-            <Flame className="w-5 h-5 text-accent-orange" />
+        {/* Stats Grid */}
+        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <span className="stat-label">Current Streak</span>
+              <Flame className="w-5 h-5 text-accent-orange" />
+            </div>
+            <p className="stat-value text-accent-orange">{stats?.currentBestStreak || 0}</p>
+            <p className="text-sm text-dark-500">days in a row</p>
           </div>
-          <p className="stat-value text-accent-orange">{stats?.currentBestStreak || 0}</p>
-          <p className="text-sm text-dark-500">days in a row</p>
-        </div>
 
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <span className="stat-label">Longest Streak</span>
-            <TrendingUp className="w-5 h-5 text-accent-green" />
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <span className="stat-label">Longest Streak</span>
+              <TrendingUp className="w-5 h-5 text-accent-green" />
+            </div>
+            <p className="stat-value text-accent-green">{stats?.longestEverStreak || 0}</p>
+            <p className="text-sm text-dark-500">personal best</p>
           </div>
-          <p className="stat-value text-accent-green">{stats?.longestEverStreak || 0}</p>
-          <p className="text-sm text-dark-500">personal best</p>
-        </div>
 
-        <div className="stat-card">
-          <div className="flex items-center justify-between">
-            <span className="stat-label">Avg Completion</span>
-            <Calendar className="w-5 h-5 text-accent-purple" />
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <span className="stat-label">Avg Completion</span>
+              <Calendar className="w-5 h-5 text-accent-purple" />
+            </div>
+            <p className="stat-value text-accent-purple">{stats?.monthlyCompletionRate || 0}%</p>
+            <p className="text-sm text-dark-500">last 30 days</p>
           </div>
-          <p className="stat-value text-accent-purple">{stats?.monthlyCompletionRate || 0}%</p>
-          <p className="text-sm text-dark-500">last 30 days</p>
         </div>
       </div>
 
@@ -164,57 +235,116 @@ const Dashboard: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {habits.map((habit) => (
-              <div
-                key={habit.id}
-                className={clsx(
-                  'flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer',
-                  habit.completed
-                    ? 'bg-dark-800/50 border-dark-700'
-                    : 'bg-dark-800 border-dark-600 hover:border-dark-500'
-                )}
-                onClick={() => handleToggle(habit.id, habit.completed)}
-              >
-                <button
+            {habits.map((habit) => {
+              const hasGoal = habit.targetValue && habit.targetValue > 0;
+              const currentValue = habit.logValue || 0;
+              const targetValue = habit.targetValue || 1;
+              const goalProgress = hasGoal ? Math.min((currentValue / targetValue) * 100, 100) : 0;
+              const isFullyComplete = habit.isCompleted || (hasGoal && currentValue >= targetValue);
+
+              return (
+                <div
+                  key={habit.id}
                   className={clsx(
-                    'flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all',
-                    habit.completed ? 'text-white' : 'text-dark-500 hover:text-dark-300'
+                    'relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer group',
+                    isFullyComplete
+                      ? 'bg-gradient-to-r from-accent-green/10 to-dark-800/50 border-accent-green/30'
+                      : 'bg-dark-800 border-dark-600 hover:border-dark-500'
                   )}
-                  style={{
-                    backgroundColor: habit.completed ? habit.color : 'transparent',
-                    borderWidth: habit.completed ? 0 : 2,
-                    borderColor: habit.color,
-                  }}
+                  onClick={() => handleHabitClick(habit)}
                 >
-                  {habit.completed && <CheckCircle2 size={16} />}
-                </button>
-
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className={clsx(
-                      'font-medium transition-colors',
-                      habit.completed ? 'text-dark-400 line-through' : 'text-white'
-                    )}
-                  >
-                    {habit.name}
-                  </h3>
-                  {habit.description && (
-                    <p className="text-sm text-dark-500 truncate">{habit.description}</p>
+                  {/* Completed indicator */}
+                  {isFullyComplete && (
+                    <div className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-green text-dark-900 text-xs font-bold shadow-lg">
+                      <CheckCircle2 size={12} />
+                      Done
+                    </div>
                   )}
-                </div>
 
-                {habit.currentStreak > 0 && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-orange/10">
-                    <Flame size={14} className="text-accent-orange" />
-                    <span className="text-sm font-medium text-accent-orange">
-                      {habit.currentStreak}
-                    </span>
+                  <button
+                    className={clsx(
+                      'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all',
+                      isFullyComplete
+                        ? 'text-white ring-2 ring-accent-green/50 ring-offset-2 ring-offset-dark-800'
+                        : 'text-dark-500 hover:text-dark-300 group-hover:scale-110'
+                    )}
+                    style={{
+                      backgroundColor: isFullyComplete ? habit.color : 'transparent',
+                      borderWidth: isFullyComplete ? 0 : 2,
+                      borderColor: habit.color,
+                    }}
+                  >
+                    {isFullyComplete && <CheckCircle2 size={18} />}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3
+                        className={clsx(
+                          'font-medium transition-colors',
+                          isFullyComplete ? 'text-accent-green' : 'text-white'
+                        )}
+                      >
+                        {habit.icon && <span className="mr-1">{habit.icon}</span>}
+                        {habit.name}
+                      </h3>
+                      {isFullyComplete && (
+                        <span className="text-xs text-dark-500">(click to undo)</span>
+                      )}
+                    </div>
+
+                    {/* Goal progress */}
+                    {hasGoal && (
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className="flex-1 h-2 bg-dark-700 rounded-full overflow-hidden max-w-[120px]">
+                          <div
+                            className={clsx(
+                              'h-full rounded-full transition-all duration-300',
+                              isFullyComplete ? 'bg-accent-green' : 'bg-primary-500'
+                            )}
+                            style={{ width: `${goalProgress}%` }}
+                          />
+                        </div>
+                        <span
+                          className={clsx(
+                            'text-xs font-medium',
+                            isFullyComplete ? 'text-accent-green' : 'text-dark-400'
+                          )}
+                        >
+                          {currentValue}/{targetValue} {habit.unit || ''}
+                        </span>
+                        {!isFullyComplete && (
+                          <span className="text-xs text-dark-500">
+                            ({targetValue - currentValue} left)
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {!hasGoal && habit.description && (
+                      <p className="text-sm text-dark-500 truncate">{habit.description}</p>
+                    )}
                   </div>
-                )}
 
-                <div className="w-1.5 h-10 rounded-full" style={{ backgroundColor: habit.color }} />
-              </div>
-            ))}
+                  {habit.currentStreak > 0 && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-orange/10">
+                      <Flame size={14} className="text-accent-orange" />
+                      <span className="text-sm font-medium text-accent-orange">
+                        {habit.currentStreak}
+                      </span>
+                    </div>
+                  )}
+
+                  <div
+                    className={clsx(
+                      'w-1.5 h-10 rounded-full transition-all',
+                      isFullyComplete && 'opacity-50'
+                    )}
+                    style={{ backgroundColor: habit.color }}
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

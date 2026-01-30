@@ -1,4 +1,4 @@
-export type Frequency = 'daily' | 'weekly' | 'custom';
+export type Frequency = 'DAILY' | 'WEEKLY';
 
 export interface Habit {
   id: string;

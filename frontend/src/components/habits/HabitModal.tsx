@@ -15,10 +15,10 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
   const [formData, setFormData] = useState({
     name: habit?.name || '',
     description: habit?.description || '',
-    frequency: habit?.frequency || 'daily',
+    frequency: habit?.frequency || 'DAILY',
     color: habit?.color || HABIT_COLORS[0].value,
     category: habit?.category || '',
-    goal: habit?.goal || 1,
+    targetValue: (habit as any)?.targetValue || 1,
   });
 
   const [errors, setErrors] = useState<{ name?: string }>({});
@@ -31,16 +31,16 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
         frequency: habit.frequency,
         color: habit.color,
         category: habit.category || '',
-        goal: habit.goal || 1,
+        targetValue: (habit as any)?.targetValue || 1,
       });
     } else {
       setFormData({
         name: '',
         description: '',
-        frequency: 'daily',
+        frequency: 'DAILY',
         color: HABIT_COLORS[0].value,
         category: '',
-        goal: 1,
+        targetValue: 1,
       });
     }
     setErrors({});
@@ -54,14 +54,20 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
       return;
     }
 
+    // Determine habit type based on target value
+    const habitType = formData.targetValue > 1 ? 'NUMERIC' : 'BOOLEAN';
+    const unit = formData.targetValue > 1 ? 'times' : undefined;
+
     onSubmit({
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
       frequency: formData.frequency as Habit['frequency'],
       color: formData.color,
       category: formData.category || undefined,
-      goal: formData.goal,
-    });
+      targetValue: formData.targetValue,
+      habitType,
+      unit,
+    } as any);
   };
 
   if (!isOpen) return null;
@@ -110,19 +116,19 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
           <div>
             <label className="label">Frequency</label>
             <div className="flex gap-2">
-              {(['daily', 'weekly'] as const).map((freq) => (
+              {(['DAILY', 'WEEKLY'] as const).map((freq) => (
                 <button
                   key={freq}
                   type="button"
                   className={clsx(
-                    'flex-1 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all capitalize',
+                    'flex-1 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all',
                     formData.frequency === freq
                       ? 'bg-primary-600/20 border-primary-500 text-primary-400'
                       : 'bg-dark-800 border-dark-600 text-dark-300 hover:border-dark-500'
                   )}
                   onClick={() => setFormData({ ...formData, frequency: freq })}
                 >
-                  {freq}
+                  {freq.charAt(0) + freq.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>
@@ -174,17 +180,19 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setFormData({ ...formData, goal: Math.max(1, formData.goal - 1) })}
+                onClick={() =>
+                  setFormData({ ...formData, targetValue: Math.max(1, formData.targetValue - 1) })
+                }
               >
                 -
               </button>
               <span className="text-2xl font-bold text-white w-12 text-center">
-                {formData.goal}
+                {formData.targetValue}
               </span>
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setFormData({ ...formData, goal: formData.goal + 1 })}
+                onClick={() => setFormData({ ...formData, targetValue: formData.targetValue + 1 })}
               >
                 +
               </button>

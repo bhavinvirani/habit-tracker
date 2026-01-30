@@ -452,7 +452,7 @@ async function updateStreaks() {
     }
 
     // Longest streak
-    const uniqueDates = [...new Set(sortedDates)].sort((a, b) => a - b);
+    const uniqueDates = Array.from(new Set(sortedDates)).sort((a, b) => a - b);
     for (let i = 0; i < uniqueDates.length; i++) {
       if (i === 0) {
         tempStreak = 1;
