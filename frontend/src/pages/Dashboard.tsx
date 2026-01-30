@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Flame,
   TrendingUp,
-  Calendar,
   Loader2,
   Plus,
   Sparkles,
@@ -241,9 +240,9 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Today's Progress Ring + Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Progress Ring */}
-        <div className="lg:col-span-2 card flex flex-col items-center justify-center py-8">
+        <div className="card flex flex-col items-center justify-center py-8">
           <div className="relative w-40 h-40">
             {/* Background circle */}
             <svg className="w-full h-full transform -rotate-90">
@@ -290,33 +289,60 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <span className="stat-label">Current Streak</span>
-              <Flame className="w-5 h-5 text-accent-orange" />
+        {/* Stats Cards - Compact Row */}
+        <div className="card p-4">
+          <h3 className="text-sm font-medium text-dark-400 uppercase tracking-wider mb-4">
+            Your Stats
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            {/* Current Streak */}
+            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-orange/10 border border-accent-orange/20">
+              <Flame className="w-6 h-6 text-accent-orange mb-2" />
+              <span className="text-2xl font-bold text-accent-orange">
+                {stats?.currentBestStreak || 0}
+              </span>
+              <span className="text-xs text-dark-400 text-center mt-1">Current Streak</span>
             </div>
-            <p className="stat-value text-accent-orange">{stats?.currentBestStreak || 0}</p>
-            <p className="text-sm text-dark-500">days in a row</p>
+
+            {/* Longest Streak */}
+            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-green/10 border border-accent-green/20">
+              <Trophy className="w-6 h-6 text-accent-green mb-2" />
+              <span className="text-2xl font-bold text-accent-green">
+                {stats?.longestEverStreak || 0}
+              </span>
+              <span className="text-xs text-dark-400 text-center mt-1">Best Streak</span>
+            </div>
+
+            {/* Avg Completion */}
+            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-purple/10 border border-accent-purple/20">
+              <TrendingUp className="w-6 h-6 text-accent-purple mb-2" />
+              <span className="text-2xl font-bold text-accent-purple">
+                {stats?.monthlyCompletionRate || 0}%
+              </span>
+              <span className="text-xs text-dark-400 text-center mt-1">30-Day Avg</span>
+            </div>
           </div>
 
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <span className="stat-label">Longest Streak</span>
-              <TrendingUp className="w-5 h-5 text-accent-green" />
+          {/* Additional Quick Stats */}
+          <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-dark-700">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-dark-800/50">
+              <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-primary-400" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-white">{stats?.totalCompletions || 0}</span>
+                <p className="text-xs text-dark-400">Total Check-ins</p>
+              </div>
             </div>
-            <p className="stat-value text-accent-green">{stats?.longestEverStreak || 0}</p>
-            <p className="text-sm text-dark-500">personal best</p>
-          </div>
-
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <span className="stat-label">Avg Completion</span>
-              <Calendar className="w-5 h-5 text-accent-purple" />
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-dark-800/50">
+              <div className="w-10 h-10 rounded-lg bg-accent-yellow/20 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-accent-yellow" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-white">{stats?.activeHabits || 0}</span>
+                <p className="text-xs text-dark-400">Active Habits</p>
+              </div>
             </div>
-            <p className="stat-value text-accent-purple">{stats?.monthlyCompletionRate || 0}%</p>
-            <p className="text-sm text-dark-500">last 30 days</p>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus, Check, Clock, Hash, Flame, Target, Calendar, Sparkles } from 'lucide-react';
 import { Habit, HABIT_COLORS, HABIT_CATEGORIES } from '../../types';
 import clsx from 'clsx';
@@ -84,6 +85,21 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [step, setStep] = useState<'basics' | 'details' | 'schedule'>('basics');
 
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   React.useEffect(() => {
     if (habit) {
       setFormData({
@@ -155,7 +171,7 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content max-w-xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
@@ -680,7 +696,8 @@ const HabitModal: React.FC<HabitModalProps> = ({ isOpen, onClose, onSubmit, habi
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
