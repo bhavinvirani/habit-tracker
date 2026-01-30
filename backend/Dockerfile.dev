@@ -1,0 +1,22 @@
+# Development Dockerfile with hot reload
+FROM node:20.18.1-alpine3.21
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+
+# Copy prisma schema
+COPY prisma ./prisma/
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Copy source
+COPY . .
+
+EXPOSE 5000
+
+# Ensure server binds to 0.0.0.0
+CMD ["npm", "run", "dev"]

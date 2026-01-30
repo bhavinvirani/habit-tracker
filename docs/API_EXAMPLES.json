@@ -1,0 +1,25 @@
+{
+  "export": {
+    "habit_data": {
+      "user_id": "uuid",
+      "habits": [
+        {
+          "id": "uuid",
+          "name": "string",
+          "description": "string",
+          "frequency": "daily|weekly|custom",
+          "color": "hex",
+          "category": "string",
+          "created_at": "ISO8601",
+          "logs": [
+            {
+              "date": "ISO8601",
+              "completed": "boolean",
+              "notes": "string"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
