@@ -1,120 +1,126 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../utils/asyncHandler';
-import { sendSuccess, sendCreated, sendPaginated } from '../utils/response';
-import logger from '../utils/logger';
+import { sendSuccess, sendCreated } from '../utils/response';
+import * as habitService from '../services/habit.service';
+import { GetHabitsQuery } from '../validators/habit.validator';
 
+/**
+ * Create a new habit
+ * POST /api/habits
+ */
 export const createHabit = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // TODO: Implement create habit with database
-  const { name, description, frequency, color } = req.body;
+  const habit = await habitService.createHabit(req.userId!, req.body);
 
-  logger.info('Habit creation requested', { userId: req.userId, name });
-
-  // Mock habit data until implementation
-  const habit = {
-    id: 'temp-habit-id',
-    name,
-    description: description || null,
-    frequency: frequency || 'daily',
-    color: color || '#3B82F6',
-    userId: req.userId,
-    isActive: true,
-    currentStreak: 0,
-    longestStreak: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  sendCreated(res, { habit }, "Habit created successfully. Let's build this habit together!");
+  sendCreated(res, { habit }, 'Habit created successfully! 🎯');
 });
 
+/**
+ * Get all habits for the authenticated user
+ * GET /api/habits
+ */
 export const getHabits = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // TODO: Implement get habits from database with pagination and filters
-  const { page = 1, limit = 20, status, frequency } = req.query;
+  const query = req.query as unknown as GetHabitsQuery;
 
-  logger.debug('Fetching habits', { userId: req.userId, status, frequency });
+  const habits = await habitService.getHabits({
+    userId: req.userId!,
+    isActive: query.isActive,
+    isArchived: query.isArchived,
+    category: query.category,
+    frequency: query.frequency,
+  });
 
-  // Mock habits list until implementation
-  const habits = [
-    {
-      id: 'habit-1',
-      name: 'Morning Exercise',
-      description: '30 minutes workout',
-      frequency: 'daily',
-      color: '#10B981',
-      isActive: true,
-      currentStreak: 5,
-      longestStreak: 12,
-      completionRate: 85,
-      lastCompleted: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  sendPaginated(
-    res,
-    habits,
-    Number(page),
-    Number(limit),
-    habits.length,
-    'Habits retrieved successfully'
-  );
+  sendSuccess(res, { habits }, 'Habits retrieved successfully');
 });
 
+/**
+ * Get a single habit by ID
+ * GET /api/habits/:id
+ */
 export const getHabitById = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // TODO: Implement get habit by ID from database
-  const { id } = req.params;
+  const habitId = req.params.id as string;
+  const habit = await habitService.getHabitById(habitId, req.userId!);
 
-  logger.debug('Fetching habit by ID', { habitId: id, userId: req.userId });
-
-  // Mock habit data until implementation
-  const habit = {
-    id,
-    name: 'Morning Exercise',
-    description: '30 minutes workout every morning',
-    frequency: 'daily',
-    color: '#10B981',
-    userId: req.userId,
-    isActive: true,
-    currentStreak: 5,
-    longestStreak: 12,
-    completionRate: 85,
-    totalCompletions: 42,
-    lastCompleted: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    recentActivity: [{ date: new Date().toISOString(), completed: true }],
-  };
-
-  sendSuccess(res, { habit }, 'Habit details retrieved successfully');
+  sendSuccess(res, { habit }, 'Habit retrieved successfully');
 });
 
+/**
+ * Update a habit
+ * PATCH /api/habits/:id
+ */
 export const updateHabit = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // TODO: Implement update habit in database
-  const { id } = req.params;
-  const { name, description, frequency, color, isActive } = req.body;
+  const habitId = req.params.id as string;
+  const habit = await habitService.updateHabit(habitId, req.userId!, req.body);
 
-  logger.info('Habit update requested', { habitId: id, userId: req.userId });
-
-  // Mock updated habit until implementation
-  const updatedHabit = {
-    id,
-    name: name || 'Updated Habit',
-    description: description || null,
-    frequency: frequency || 'daily',
-    color: color || '#3B82F6',
-    isActive: isActive !== undefined ? isActive : true,
-    updatedAt: new Date().toISOString(),
-  };
-
-  sendSuccess(res, { habit: updatedHabit }, 'Habit updated successfully');
+  sendSuccess(res, { habit }, 'Habit updated successfully');
 });
 
+/**
+ * Delete a habit
+ * DELETE /api/habits/:id
+ */
 export const deleteHabit = asyncHandler(async (req: AuthRequest, res: Response) => {
-  // TODO: Implement delete habit from database
-  const { id } = req.params;
+  const habitId = req.params.id as string;
+  await habitService.deleteHabit(habitId, req.userId!);
 
-  logger.info('Habit deletion requested', { habitId: id, userId: req.userId });
+  sendSuccess(res, { deletedId: habitId }, 'Habit deleted successfully');
+});
 
-  sendSuccess(res, { deletedId: id }, 'Habit deleted successfully');
+/**
+ * Archive a habit
+ * POST /api/habits/:id/archive
+ */
+export const archiveHabit = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const habitId = req.params.id as string;
+  const habit = await habitService.archiveHabit(habitId, req.userId!);
+
+  sendSuccess(res, { habit }, 'Habit archived successfully');
+});
+
+/**
+ * Unarchive a habit
+ * POST /api/habits/:id/unarchive
+ */
+export const unarchiveHabit = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const habitId = req.params.id as string;
+  const habit = await habitService.unarchiveHabit(habitId, req.userId!);
+
+  sendSuccess(res, { habit }, 'Habit restored successfully');
+});
+
+/**
+ * Get all archived habits
+ * GET /api/habits/archived
+ */
+export const getArchivedHabits = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const habits = await habitService.getArchivedHabits(req.userId!);
+
+  sendSuccess(res, { habits }, 'Archived habits retrieved successfully');
+});
+
+/**
+ * Reorder habits
+ * PATCH /api/habits/reorder
+ */
+export const reorderHabits = asyncHandler(async (req: AuthRequest, res: Response) => {
+  await habitService.reorderHabits(req.userId!, req.body.habitIds);
+
+  sendSuccess(res, null, 'Habits reordered successfully');
+});
+
+/**
+ * Get all categories
+ * GET /api/categories
+ */
+export const getCategories = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const categories = await habitService.getCategories(req.userId!);
+
+  sendSuccess(
+    res,
+    {
+      categories,
+      defaultCategories: habitService.DEFAULT_CATEGORIES,
+    },
+    'Categories retrieved successfully'
+  );
 });
