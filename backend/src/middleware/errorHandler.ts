@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 import logger from '../utils/logger';
 import { AppError } from '../utils/AppError';
 
 /**
  * Convert Prisma errors to AppError
  */
-const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): AppError => {
+const handlePrismaError = (error: PrismaClientKnownRequestError): AppError => {
   switch (error.code) {
     case 'P2002': {
       // Unique constraint violation
@@ -112,11 +115,11 @@ export const errorHandler = (
     error = err;
   }
   // Handle Prisma errors
-  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  else if (err instanceof PrismaClientKnownRequestError) {
     error = handlePrismaError(err);
   }
   // Handle Prisma validation errors
-  else if (err instanceof Prisma.PrismaClientValidationError) {
+  else if (err instanceof PrismaClientValidationError) {
     error = new AppError('Invalid data provided to database', 400, true, 'VALIDATION_ERROR');
   }
   // Handle JWT errors
