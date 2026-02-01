@@ -56,4 +56,4 @@ docker-compose.override.yml
 temp/
 tmp/
 
-.claude
+.claude/*

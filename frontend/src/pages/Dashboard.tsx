@@ -453,7 +453,7 @@ const Dashboard: React.FC = () => {
 
 // Habit Card Component
 interface HabitCardProps {
-  habit: any;
+  habit: TodayHabit;
   onClick: () => void;
   isWeekly?: boolean;
 }
