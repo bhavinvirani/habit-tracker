@@ -38,6 +38,7 @@ Thumbs.db
 # Database
 *.db
 *.sqlite
+.claude/
 *.sqlite3
 
 # Prisma
@@ -57,3 +58,4 @@ temp/
 tmp/
 
 .claude/*
+.claude/
