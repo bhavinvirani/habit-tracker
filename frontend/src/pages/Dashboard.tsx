@@ -214,164 +214,6 @@ const Dashboard: React.FC = () => {
         </button>
       </div>
 
-      {/* Currently Reading Widget - At Top */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-accent-blue" />
-            <h2 className="text-lg font-semibold text-white">Currently Reading</h2>
-          </div>
-          <Link to="/books" className="text-sm text-primary-400 hover:text-primary-300">
-            View all →
-          </Link>
-        </div>
-
-        {currentBook ? (
-          <>
-            <div className="flex gap-4">
-              {/* Book Cover */}
-              <div className="flex-shrink-0 w-16 h-24 rounded-lg bg-dark-700 overflow-hidden">
-                {currentBook.coverUrl ? (
-                  <img
-                    src={currentBook.coverUrl}
-                    alt={currentBook.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-dark-500">
-                    <BookOpen size={20} />
-                  </div>
-                )}
-              </div>
-
-              {/* Book Info */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-white truncate">{currentBook.title}</h3>
-                <p className="text-sm text-dark-400 truncate">{currentBook.author}</p>
-
-                {/* Progress Info */}
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm text-dark-400">
-                    Page {currentBook.currentPage}
-                    {currentBook.totalPages ? ` of ${currentBook.totalPages}` : ''}
-                  </span>
-                  <span className="text-sm text-accent-blue font-medium">
-                    {currentBook.progress || 0}%
-                  </span>
-                </div>
-
-                {/* Quick Stats */}
-                <div className="flex items-center gap-4 mt-1 text-xs text-dark-500">
-                  <span>{currentBook.pagesReadThisWeek} pages this week</span>
-                  {currentBook.estimatedDaysToFinish && (
-                    <span>~{currentBook.estimatedDaysToFinish} days left</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Page Update Buttons - Right Side */}
-              <div className="flex-shrink-0">
-                <p className="text-xs text-dark-500 mb-2">Add pages:</p>
-                <div className="flex gap-1.5">
-                  {[5, 10, 25, 50].map((increment) => {
-                    const newPage = currentBook.currentPage + increment;
-                    const isDisabled = !!(
-                      currentBook.totalPages && newPage > currentBook.totalPages
-                    );
-                    return (
-                      <button
-                        key={increment}
-                        onClick={() => {
-                          if (!isDisabled) {
-                            updateBookProgressMutation.mutate({
-                              bookId: currentBook.id,
-                              currentPage: Math.min(newPage, currentBook.totalPages || newPage),
-                            });
-                          }
-                        }}
-                        disabled={updateBookProgressMutation.isPending || isDisabled}
-                        className={clsx(
-                          'py-2 px-3 rounded-lg text-sm font-medium transition-all',
-                          isDisabled
-                            ? 'bg-dark-800 text-dark-600 cursor-not-allowed'
-                            : 'bg-dark-700 text-dark-300 hover:bg-accent-blue/20 hover:text-accent-blue'
-                        )}
-                      >
-                        +{increment}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-24 rounded-lg bg-dark-800 flex items-center justify-center">
-              <BookOpen size={24} className="text-dark-500" />
-            </div>
-            <div className="flex-1">
-              <p className="text-dark-400">No book in progress</p>
-            </div>
-            <Link to="/books" className="btn btn-primary">
-              Start Reading
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {/* Mini Heatmap - Last 14 Days */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary-400" />
-            <h2 className="text-lg font-semibold text-white">Last 14 Days</h2>
-          </div>
-          <Link to="/calendar" className="text-sm text-primary-400 hover:text-primary-300">
-            View Calendar →
-          </Link>
-        </div>
-        <div className="flex gap-1.5">
-          {heatmapDays.map((day) => (
-            <div key={day.date} className="flex-1 text-center">
-              <p className="text-xs text-dark-500 mb-1">{day.dayName}</p>
-              <div
-                className={clsx(
-                  'aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-all',
-                  day.percentage === 0 && 'bg-dark-800 text-dark-600',
-                  day.percentage > 0 && day.percentage < 50 && 'bg-primary-600/20 text-primary-400',
-                  day.percentage >= 50 &&
-                    day.percentage < 100 &&
-                    'bg-primary-600/40 text-primary-300',
-                  day.percentage === 100 && 'bg-accent-green/60 text-white'
-                )}
-                title={`${day.date}: ${day.completed}/${day.total} (${day.percentage}%)`}
-              >
-                {day.dayNum}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-dark-700">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-dark-800" />
-            <span className="text-xs text-dark-500">0%</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-primary-600/20" />
-            <span className="text-xs text-dark-500">1-49%</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-primary-600/40" />
-            <span className="text-xs text-dark-500">50-99%</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-accent-green/60" />
-            <span className="text-xs text-dark-500">100%</span>
-          </div>
-        </div>
-      </div>
-
       {/* Today's Progress Ring + Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Progress Ring */}
@@ -480,6 +322,177 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Mini Heatmap - Last 14 Days */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-primary-400" />
+            <h2 className="text-lg font-semibold text-white">Last 14 Days</h2>
+          </div>
+          <Link to="/calendar" className="text-sm text-primary-400 hover:text-primary-300">
+            View Calendar →
+          </Link>
+        </div>
+        <div className="flex gap-1.5">
+          {heatmapDays.map((day) => (
+            <div key={day.date} className="flex-1 text-center">
+              <p className="text-xs text-dark-500 mb-1">{day.dayName}</p>
+              <div
+                className={clsx(
+                  'aspect-square rounded-md flex items-center justify-center text-xs font-medium transition-all',
+                  day.percentage === 0 && 'bg-dark-800 text-dark-600',
+                  day.percentage > 0 && day.percentage < 50 && 'bg-primary-600/20 text-primary-400',
+                  day.percentage >= 50 &&
+                    day.percentage < 100 &&
+                    'bg-primary-600/40 text-primary-300',
+                  day.percentage === 100 && 'bg-accent-green/60 text-white'
+                )}
+                title={`${day.date}: ${day.completed}/${day.total} (${day.percentage}%)`}
+              >
+                {day.dayNum}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-dark-700">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-dark-800" />
+            <span className="text-xs text-dark-500">0%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-primary-600/20" />
+            <span className="text-xs text-dark-500">1-49%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-primary-600/40" />
+            <span className="text-xs text-dark-500">50-99%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-accent-green/60" />
+            <span className="text-xs text-dark-500">100%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Currently Reading Widget - Compact with Progress Bar */}
+      <div className="card p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-accent-blue" />
+            <h3 className="text-sm font-medium text-white">Currently Reading</h3>
+          </div>
+          <Link to="/books" className="text-xs text-primary-400 hover:text-primary-300">
+            View all →
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Book Icon / Cover */}
+          <Link to="/books" className="flex-shrink-0">
+            {currentBook?.coverUrl ? (
+              <div className="w-12 h-16 rounded-lg overflow-hidden hover:scale-105 transition-transform">
+                <img
+                  src={currentBook.coverUrl}
+                  alt={currentBook.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-12 h-12 rounded-xl bg-accent-blue/20 flex items-center justify-center">
+                <BookOpen className="w-6 h-6 text-accent-blue" />
+              </div>
+            )}
+          </Link>
+
+          {/* Book Info & Progress */}
+          <div className="flex-1 min-w-0">
+            {currentBook ? (
+              <>
+                <div className="min-w-0">
+                  <h3 className="font-medium text-white text-sm truncate">{currentBook.title}</h3>
+                  <p className="text-xs text-dark-400 truncate">{currentBook.author}</p>
+                </div>
+                {/* Progress Bar */}
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-dark-700 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{
+                          width: `${currentBook.progress ?? (currentBook.totalPages ? Math.round((currentBook.currentPage / currentBook.totalPages) * 100) : 0)}%`,
+                          background: 'linear-gradient(to right, #3b82f6, #6366f1)',
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-blue-400 w-10 text-right">
+                      {currentBook.progress ??
+                        (currentBook.totalPages
+                          ? Math.round((currentBook.currentPage / currentBook.totalPages) * 100)
+                          : 0)}
+                      %
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-dark-500">
+                      p.{currentBook.currentPage}
+                      {currentBook.totalPages ? `/${currentBook.totalPages}` : ''}
+                      {currentBook.pagesReadThisWeek > 0 && (
+                        <span className="text-dark-400">
+                          {' '}
+                          · {currentBook.pagesReadThisWeek} this week
+                        </span>
+                      )}
+                    </span>
+                    {currentBook.estimatedDaysToFinish && (
+                      <span className="text-xs text-dark-500">
+                        ~{currentBook.estimatedDaysToFinish}d left
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-dark-400">
+                No book in progress. Start reading to track your progress!
+              </p>
+            )}
+          </div>
+
+          {/* Quick Page Update Buttons */}
+          {currentBook && (
+            <div className="flex-shrink-0 flex gap-1.5">
+              {[5, 10, 25, 50].map((increment) => {
+                const newPage = currentBook.currentPage + increment;
+                const isDisabled = !!(currentBook.totalPages && newPage > currentBook.totalPages);
+                return (
+                  <button
+                    key={increment}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        updateBookProgressMutation.mutate({
+                          bookId: currentBook.id,
+                          currentPage: Math.min(newPage, currentBook.totalPages || newPage),
+                        });
+                      }
+                    }}
+                    disabled={updateBookProgressMutation.isPending || isDisabled}
+                    className={clsx(
+                      'py-1.5 px-2.5 rounded-lg text-xs font-medium transition-all',
+                      isDisabled
+                        ? 'bg-dark-800 text-dark-600 cursor-not-allowed'
+                        : 'bg-dark-700 text-dark-300 hover:bg-accent-blue/20 hover:text-accent-blue'
+                    )}
+                  >
+                    +{increment}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Today's Habits */}
       <div className="space-y-6">
         {habits.length === 0 ? (
@@ -569,125 +582,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {/* Currently Reading Widget - Always show */}
-            <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-accent-blue" />
-                  <h2 className="text-lg font-semibold text-white">Currently Reading</h2>
-                </div>
-                <Link to="/books" className="text-sm text-primary-400 hover:text-primary-300">
-                  View all →
-                </Link>
-              </div>
-
-              {currentBook ? (
-                <>
-                  <div className="flex gap-4">
-                    {/* Book Cover */}
-                    <div className="flex-shrink-0 w-20 h-28 rounded-lg bg-dark-700 overflow-hidden">
-                      {currentBook.coverUrl ? (
-                        <img
-                          src={currentBook.coverUrl}
-                          alt={currentBook.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-dark-500">
-                          <BookOpen size={24} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Book Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white truncate">{currentBook.title}</h3>
-                      <p className="text-sm text-dark-400 truncate">{currentBook.author}</p>
-
-                      {/* Progress Bar */}
-                      {currentBook.progress !== null && (
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-dark-400">
-                              Page {currentBook.currentPage}
-                              {currentBook.totalPages ? ` of ${currentBook.totalPages}` : ''}
-                            </span>
-                            <span className="text-accent-blue font-medium">
-                              {currentBook.progress}%
-                            </span>
-                          </div>
-                          <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-accent-blue rounded-full transition-all duration-300"
-                              style={{ width: `${currentBook.progress}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Quick Stats */}
-                      <div className="flex items-center gap-4 mt-3 text-xs text-dark-400">
-                        <span>{currentBook.pagesReadThisWeek} pages this week</span>
-                        {currentBook.estimatedDaysToFinish && (
-                          <span>~{currentBook.estimatedDaysToFinish} days left</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Page Update Buttons */}
-                  <div className="mt-4 pt-4 border-t border-dark-700">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-dark-500">Add pages:</span>
-                      <div className="flex gap-2 flex-1">
-                        {[5, 10, 25, 50].map((increment) => {
-                          const newPage = currentBook.currentPage + increment;
-                          const isDisabled = !!(
-                            currentBook.totalPages && newPage > currentBook.totalPages
-                          );
-                          return (
-                            <button
-                              key={increment}
-                              onClick={() => {
-                                if (!isDisabled) {
-                                  updateBookProgressMutation.mutate({
-                                    bookId: currentBook.id,
-                                    currentPage: Math.min(
-                                      newPage,
-                                      currentBook.totalPages || newPage
-                                    ),
-                                  });
-                                }
-                              }}
-                              disabled={updateBookProgressMutation.isPending || isDisabled}
-                              className={clsx(
-                                'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all',
-                                isDisabled
-                                  ? 'bg-dark-800 text-dark-600 cursor-not-allowed'
-                                  : 'bg-dark-700 text-dark-300 hover:bg-accent-blue/20 hover:text-accent-blue'
-                              )}
-                            >
-                              +{increment}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6">
-                  <div className="w-16 h-16 rounded-2xl bg-dark-800 flex items-center justify-center mx-auto mb-4">
-                    <BookOpen size={28} className="text-dark-500" />
-                  </div>
-                  <p className="text-dark-400 mb-4">No book in progress</p>
-                  <Link to="/books" className="btn btn-primary">
-                    Start Reading
-                  </Link>
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>
