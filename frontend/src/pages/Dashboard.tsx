@@ -4,13 +4,12 @@ import {
   CheckCircle2,
   Flame,
   TrendingUp,
-  Loader2,
   Plus,
-  Sparkles,
   CalendarDays,
   Trophy,
   Clock,
   BookOpen,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -26,6 +25,7 @@ import { format, subDays } from 'date-fns';
 import clsx from 'clsx';
 import HabitModal from '../components/habits/HabitModal';
 import { Habit } from '../types';
+import { LoadingSpinner, PageHeader, StatCard, CircularProgress, Button } from '../components/ui';
 
 const Dashboard: React.FC = () => {
   const queryClient = useQueryClient();
@@ -157,11 +157,7 @@ const Dashboard: React.FC = () => {
   const isLoading = loadingToday || loadingStats;
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   const habits = todayData?.habits || [];
@@ -203,59 +199,28 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-dark-400 mt-1">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-        </div>
-        <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
-          <Plus size={18} />
-          New Habit
-        </button>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={format(new Date(), 'EEEE, MMMM d, yyyy')}
+        action={
+          <Button icon={Plus} onClick={() => setIsModalOpen(true)}>
+            New Habit
+          </Button>
+        }
+      />
 
       {/* Today's Progress Ring + Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Progress Ring */}
         <div className="card flex flex-col items-center justify-center py-8">
-          <div className="relative w-40 h-40">
-            {/* Background circle */}
-            <svg className="w-full h-full transform -rotate-90">
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke="currentColor"
-                strokeWidth="12"
-                fill="none"
-                className="text-dark-700"
-              />
-              {/* Progress circle */}
-              <circle
-                cx="80"
-                cy="80"
-                r="70"
-                stroke="url(#progressGradient)"
-                strokeWidth="12"
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 70}
-                strokeDashoffset={2 * Math.PI * 70 * (1 - percentage / 100)}
-                className="transition-all duration-700 ease-out"
-              />
-              <defs>
-                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#22c55e" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {/* Center text */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-4xl font-bold text-white">{percentage}%</span>
-              <span className="text-sm text-dark-400">complete</span>
-            </div>
-          </div>
+          <CircularProgress
+            percent={percentage}
+            size={160}
+            strokeWidth={12}
+            gradientColors={['#6366f1', '#22c55e']}
+            label="complete"
+            gradientId="dashboardProgress"
+          />
           <div className="mt-4 text-center">
             <p className="text-lg font-semibold text-white">Today's Progress</p>
             <p className="text-dark-400">
@@ -270,54 +235,43 @@ const Dashboard: React.FC = () => {
             Your Stats
           </h3>
           <div className="grid grid-cols-3 gap-3">
-            {/* Current Streak */}
-            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-orange/10 border border-accent-orange/20">
-              <Flame className="w-6 h-6 text-accent-orange mb-2" />
-              <span className="text-2xl font-bold text-accent-orange">
-                {stats?.currentBestStreak || 0}
-              </span>
-              <span className="text-xs text-dark-400 text-center mt-1">Current Streak</span>
-            </div>
-
-            {/* Longest Streak */}
-            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-green/10 border border-accent-green/20">
-              <Trophy className="w-6 h-6 text-accent-green mb-2" />
-              <span className="text-2xl font-bold text-accent-green">
-                {stats?.longestEverStreak || 0}
-              </span>
-              <span className="text-xs text-dark-400 text-center mt-1">Best Streak</span>
-            </div>
-
-            {/* Avg Completion */}
-            <div className="flex flex-col items-center p-4 rounded-xl bg-accent-purple/10 border border-accent-purple/20">
-              <TrendingUp className="w-6 h-6 text-accent-purple mb-2" />
-              <span className="text-2xl font-bold text-accent-purple">
-                {stats?.monthlyCompletionRate || 0}%
-              </span>
-              <span className="text-xs text-dark-400 text-center mt-1">30-Day Avg</span>
-            </div>
+            <StatCard
+              icon={Flame}
+              value={stats?.currentBestStreak || 0}
+              label="Current Streak"
+              color="orange"
+            />
+            <StatCard
+              icon={Trophy}
+              value={stats?.longestEverStreak || 0}
+              label="Best Streak"
+              color="green"
+            />
+            <StatCard
+              icon={TrendingUp}
+              value={stats?.monthlyCompletionRate || 0}
+              label="30-Day Avg"
+              suffix="%"
+              color="purple"
+            />
           </div>
 
           {/* Additional Quick Stats */}
           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-dark-700">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-dark-800/50">
-              <div className="w-10 h-10 rounded-lg bg-primary-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-5 h-5 text-primary-400" />
-              </div>
-              <div>
-                <span className="text-lg font-bold text-white">{stats?.totalCompletions || 0}</span>
-                <p className="text-xs text-dark-400">Total Check-ins</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-dark-800/50">
-              <div className="w-10 h-10 rounded-lg bg-accent-yellow/20 flex items-center justify-center">
-                <CalendarDays className="w-5 h-5 text-accent-yellow" />
-              </div>
-              <div>
-                <span className="text-lg font-bold text-white">{stats?.activeHabits || 0}</span>
-                <p className="text-xs text-dark-400">Active Habits</p>
-              </div>
-            </div>
+            <StatCard
+              icon={CheckCircle2}
+              value={stats?.totalCompletions || 0}
+              label="Total Check-ins"
+              color="primary"
+              variant="minimal"
+            />
+            <StatCard
+              icon={CalendarDays}
+              value={stats?.activeHabits || 0}
+              label="Active Habits"
+              color="yellow"
+              variant="minimal"
+            />
           </div>
         </div>
       </div>

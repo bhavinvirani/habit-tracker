@@ -197,6 +197,12 @@ export const habitsApi = {
     return response.data.data.habits;
   },
 
+  getArchived: async (): Promise<HabitWithStats[]> => {
+    const response =
+      await api.get<ApiResponse<{ habits: HabitWithStats[] }>>('/habits?isArchived=true');
+    return response.data.data.habits;
+  },
+
   getById: async (id: string): Promise<HabitWithStats> => {
     const response = await api.get<ApiResponse<{ habit: HabitWithStats }>>(`/habits/${id}`);
     return response.data.data.habit;

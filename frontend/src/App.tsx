@@ -11,6 +11,7 @@ import Challenges from './pages/Challenges';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ApiDocs from './pages/ApiDocs';
+import Help from './pages/Help';
 import { useAuthStore } from './store/authStore';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="books" element={<Books />} />
           <Route path="challenges" element={<Challenges />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="help" element={<Help />} />
         </Route>
       </Routes>
       <Toaster

@@ -8,7 +8,6 @@ import {
   Flame,
   Target,
   LogOut,
-  Loader2,
   Check,
   Shield,
   BookOpen,
@@ -28,11 +27,14 @@ import {
   CheckCircle,
   Keyboard,
   HelpCircle,
+  Loader2,
+  Archive,
+  RotateCcw,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
-import { analyticsApi, trackingApi } from '../services/habits';
+import { analyticsApi, trackingApi, habitsApi } from '../services/habits';
 import api from '../services/api';
 import clsx from 'clsx';
 import ApiDashboard from '../components/ApiDashboard';
@@ -145,7 +147,7 @@ const BADGES = [
   },
 ];
 
-type Tab = 'overview' | 'achievements' | 'settings';
+type Tab = 'overview' | 'achievements' | 'archived' | 'settings';
 
 // Level system explanation
 const LEVEL_INFO = {
@@ -204,6 +206,25 @@ const Profile: React.FC = () => {
       } catch {
         return [];
       }
+    },
+  });
+
+  // Fetch archived habits
+  const { data: archivedHabits, isLoading: loadingArchived } = useQuery({
+    queryKey: ['habits', 'archived'],
+    queryFn: habitsApi.getArchived,
+  });
+
+  // Unarchive habit mutation
+  const unarchiveMutation = useMutation({
+    mutationFn: habitsApi.unarchive,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['overview'] });
+      toast.success('Habit restored successfully!');
+    },
+    onError: () => {
+      toast.error('Failed to restore habit');
     },
   });
 
@@ -285,6 +306,7 @@ const Profile: React.FC = () => {
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'achievements', label: 'Achievements', icon: Trophy },
+    { id: 'archived', label: 'Archived', icon: Archive },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -761,6 +783,134 @@ const Profile: React.FC = () => {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Archived Tab */}
+      {activeTab === 'archived' && (
+        <div className="space-y-6">
+          {/* Info Banner */}
+          <div className="card bg-dark-800/50 border-dark-700">
+            <div className="flex items-start gap-3">
+              <Archive className="text-dark-400 mt-0.5" size={20} />
+              <div>
+                <h3 className="font-medium text-white">Archived Habits</h3>
+                <p className="text-dark-400 text-sm mt-1">
+                  Archived habits are hidden from your daily tracking but their historical data is
+                  preserved. You can restore them at any time to resume tracking.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Archived Habits List */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Archive size={20} className="text-dark-400" />
+              Archived Habits
+              {archivedHabits && archivedHabits.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-dark-700 text-dark-400">
+                  {archivedHabits.length}
+                </span>
+              )}
+            </h3>
+
+            {loadingArchived ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="animate-spin text-primary-500" size={24} />
+              </div>
+            ) : archivedHabits && archivedHabits.length > 0 ? (
+              <div className="space-y-3">
+                {archivedHabits.map((habit) => (
+                  <div
+                    key={habit.id}
+                    className="flex items-center justify-between p-4 bg-dark-800 rounded-xl border border-dark-700"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${habit.color}20` }}
+                      >
+                        <Target size={20} style={{ color: habit.color }} />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-white">{habit.name}</h4>
+                        <div className="flex items-center gap-2 text-xs text-dark-400">
+                          <span className="capitalize">
+                            {habit.category?.toLowerCase() || 'general'}
+                          </span>
+                          <span>•</span>
+                          <span className="capitalize">
+                            {habit.frequency?.toLowerCase() || 'daily'}
+                          </span>
+                          {habit.totalCompletions !== undefined && (
+                            <>
+                              <span>•</span>
+                              <span>{habit.totalCompletions} completions</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => unarchiveMutation.mutate(habit.id)}
+                      disabled={unarchiveMutation.isPending}
+                      className="btn btn-secondary btn-sm flex items-center gap-2"
+                    >
+                      <RotateCcw size={14} />
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Archive size={40} className="mx-auto text-dark-600 mb-3" />
+                <p className="text-dark-400">No archived habits</p>
+                <p className="text-dark-500 text-sm mt-1">
+                  Habits you archive will appear here. You can archive habits from the Habits page.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Data Info */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <BarChart3 size={20} className="text-primary-400" />
+              Data Retention
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+                <CheckCircle size={16} className="text-accent-green mt-0.5" />
+                <div>
+                  <p className="text-white font-medium">Historical data is preserved</p>
+                  <p className="text-dark-400">
+                    All your completion logs, streaks, and statistics are kept when you archive a
+                    habit.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+                <CheckCircle size={16} className="text-accent-green mt-0.5" />
+                <div>
+                  <p className="text-white font-medium">Calendar history intact</p>
+                  <p className="text-dark-400">
+                    Archived habits still appear in your calendar for past dates.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-dark-800 rounded-lg">
+                <CheckCircle size={16} className="text-accent-green mt-0.5" />
+                <div>
+                  <p className="text-white font-medium">Restore anytime</p>
+                  <p className="text-dark-400">
+                    Click "Restore" to bring back any archived habit and continue tracking.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
