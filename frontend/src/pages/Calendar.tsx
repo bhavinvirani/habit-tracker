@@ -23,7 +23,7 @@ import {
   subMonths,
   isSameMonth,
   isSameDay,
-  isToday,
+  startOfToday,
   startOfYear,
   eachMonthOfInterval,
   getDay,
@@ -143,6 +143,7 @@ const Calendar: React.FC = () => {
     const monthEnd = endOfMonth(currentDate);
     const startDate = startOfWeek(monthStart);
     const endDate = endOfWeek(monthEnd);
+    const today = startOfToday();
 
     const rows = [];
     let days = [];
@@ -164,7 +165,7 @@ const Calendar: React.FC = () => {
         const percentage = dayData?.percentage || 0;
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isSelected = selectedDate && isSameDay(day, selectedDate);
-        const isTodayDate = isToday(day);
+        const isTodayDate = isSameDay(day, today);
 
         const getBgColor = () => {
           if (!isCurrentMonth) return 'bg-transparent';
