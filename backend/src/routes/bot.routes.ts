@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticateApiKey } from '../middleware/apiKeyAuth';
+import { botRequestLogger } from '../middleware/botRequestLogger';
 import { validateBody } from '../middleware/validate';
 import {
   checkInSchema,
@@ -16,7 +17,8 @@ import {
 
 const router = Router();
 
-// All bot routes require API key authentication
+// All bot routes require API key authentication and detailed logging
+router.use(botRequestLogger);
 router.use(authenticateApiKey);
 
 // Habit tracking
