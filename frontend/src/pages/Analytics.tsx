@@ -260,8 +260,7 @@ const Analytics: React.FC = () => {
     return null;
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const DayOfWeekTooltip = ({ active, payload, label }: any) => {
+  const DayOfWeekTooltip = ({ active, payload, label }: ChartTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-dark-800 border border-dark-600 rounded-lg p-3 shadow-xl">
