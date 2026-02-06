@@ -26,6 +26,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import clsx from 'clsx';
 import { CircularProgress } from '../components/ui';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { BOOK_STATUS_CONFIG, type BookStatus } from '../constants/status';
 
 interface Book {
@@ -95,6 +96,7 @@ const Books: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [inlineEditingBook, setInlineEditingBook] = useState<string | null>(null);
   const [inlinePageValue, setInlinePageValue] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const pageInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -240,9 +242,7 @@ const Books: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Remove this book from your library?')) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDeleteId(id);
   };
 
   const handleUpdateProgress = (book: Book, newPage: number) => {
@@ -1514,6 +1514,22 @@ const Books: React.FC = () => {
           box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
       `}</style>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            deleteMutation.mutate(confirmDeleteId);
+            setConfirmDeleteId(null);
+          }
+        }}
+        title="Remove Book"
+        message="Remove this book from your library?"
+        confirmText="Remove"
+        danger
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 };

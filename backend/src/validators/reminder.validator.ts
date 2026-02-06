@@ -12,7 +12,7 @@ const timeString = z
   );
 
 export const createReminderSchema = z.object({
-  habitId: z.string().min(1, 'Habit ID is required'),
+  habitId: z.string().uuid('Invalid habit ID format'),
   time: timeString,
 });
 

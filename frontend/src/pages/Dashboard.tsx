@@ -43,10 +43,11 @@ const Dashboard: React.FC = () => {
     queryFn: analyticsApi.getOverview,
   });
 
-  // Fetch weekly analytics for mini heatmap
+  // Fetch 14-day analytics for mini heatmap
+  const heatmapStartDate = format(subDays(new Date(), 13), 'yyyy-MM-dd');
   const { data: weeklyData } = useQuery({
-    queryKey: ['weekly'],
-    queryFn: () => analyticsApi.getWeekly(),
+    queryKey: ['weekly-heatmap', heatmapStartDate],
+    queryFn: () => analyticsApi.getWeekly({ startDate: heatmapStartDate }),
   });
 
   // Fetch currently reading book

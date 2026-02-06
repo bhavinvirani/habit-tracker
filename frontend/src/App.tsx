@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -14,10 +15,30 @@ import Register from './pages/Register';
 import ApiDocs from './pages/ApiDocs';
 import IntegrationDocs from './pages/IntegrationDocs';
 import Help from './pages/Help';
+import NotFound from './pages/NotFound';
 import { useAuthStore } from './store/authStore';
+import { restoreSession } from './services/api';
 
 function App() {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+
+  // Restore session from httpOnly refresh token cookie on app startup
+  useEffect(() => {
+    const init = async () => {
+      await restoreSession();
+      useAuthStore.getState().setInitialized();
+    };
+    init();
+  }, []);
+
+  // Show loading screen while restoring session
+  if (!isInitialized) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-900">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -63,7 +84,7 @@ function App() {
           }
         />
 
-        <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
+        <Route element={isAuthenticated ? <Layout /> : <Navigate to="/login" />}>
           <Route
             index
             element={
@@ -129,6 +150,9 @@ function App() {
             }
           />
         </Route>
+
+        {/* 404 for all unknown paths — outside auth guard so it renders regardless of auth state */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster
         position="top-right"

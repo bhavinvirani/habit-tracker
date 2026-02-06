@@ -17,6 +17,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npx prisma generate --schema=backend/prisma/schema.prisma
       - run: npm run lint
       - run: npx tsc --noEmit --project backend/tsconfig.json
       - run: npx tsc --noEmit --project shared/tsconfig.json
@@ -31,6 +32,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npx prisma generate --schema=backend/prisma/schema.prisma
       - run: npm test --workspace=backend
 
   build:

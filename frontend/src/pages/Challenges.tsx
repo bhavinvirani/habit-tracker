@@ -27,6 +27,7 @@ import {
   type ChallengeStatus,
 } from '../constants/status';
 import { CircularProgress } from '../components/ui';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 interface ChallengeHabit {
   id: string;
@@ -102,6 +103,7 @@ const Challenges: React.FC = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState<Challenge | null>(null);
   const [filterStatus, setFilterStatus] = useState<ChallengeStatus | 'ALL'>('ALL');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -225,9 +227,7 @@ const Challenges: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Delete this challenge?')) {
-      deleteMutation.mutate(id);
-    }
+    setConfirmDeleteId(id);
   };
 
   const toggleHabitSelection = (habitId: string) => {
@@ -926,6 +926,22 @@ const Challenges: React.FC = () => {
           animation: slide-in-right 0.3s ease-out;
         }
       `}</style>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            deleteMutation.mutate(confirmDeleteId);
+            setConfirmDeleteId(null);
+          }
+        }}
+        title="Delete Challenge"
+        message="Delete this challenge? This cannot be undone."
+        confirmText="Delete"
+        danger
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 };

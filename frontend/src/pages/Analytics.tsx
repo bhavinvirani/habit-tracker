@@ -52,7 +52,7 @@ const Analytics: React.FC = () => {
 
   const { data: weekly, isLoading: loadingWeekly } = useQuery({
     queryKey: ['weekly', weekDate],
-    queryFn: () => analyticsApi.getWeekly(weekDate),
+    queryFn: () => analyticsApi.getWeekly(weekDate ? { startDate: weekDate } : undefined),
   });
 
   const { data: streaks, isLoading: loadingStreaks } = useQuery({

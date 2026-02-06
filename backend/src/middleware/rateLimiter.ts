@@ -140,6 +140,16 @@ export const sensitiveLimiter = createLimiter({
   },
 });
 
+// ============ HEALTH CHECK ============
+
+/**
+ * Health endpoint: 20 requests per minute per IP
+ */
+export const healthLimiter = createLimiter({
+  windowMs: 60 * 1000,
+  limit: 20,
+});
+
 // ============ GENERAL FALLBACK ============
 
 /**

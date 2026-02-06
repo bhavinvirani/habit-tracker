@@ -53,7 +53,13 @@ const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const { api } = await import('../../services/api');
+      await api.post('/auth/logout');
+    } catch {
+      // Continue logout even if API call fails
+    }
     logout();
     navigate('/login');
   };
