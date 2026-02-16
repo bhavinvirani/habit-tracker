@@ -16,6 +16,7 @@ export const registerSchema = z.object({
     .min(1, 'Name is required')
     .max(100, 'Name must be less than 100 characters')
     .trim(),
+  timezone: z.string().max(100).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -23,6 +24,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address').toLowerCase().trim(),
   password: z.string().min(1, 'Password is required'),
+  timezone: z.string().max(100).optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

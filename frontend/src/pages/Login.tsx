@@ -39,7 +39,10 @@ const Login: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await api.post('/auth/login', formData);
+      const response = await api.post('/auth/login', {
+        ...formData,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
       const { token, user } = response.data.data;
       login(user, token);
       toast.success(`Welcome back, ${user.name}!`);

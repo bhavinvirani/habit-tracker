@@ -62,6 +62,7 @@ const Register: React.FC = () => {
         name: formData.name.trim(),
         email: formData.email,
         password: formData.password,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
       const { token, user } = response.data.data;
       login(user, token);

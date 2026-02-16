@@ -22,7 +22,7 @@ import {
   TodayResponse,
   WeeklyDay,
 } from '../services/habits';
-import { format, subDays } from 'date-fns';
+import { format, subDays, parseISO } from 'date-fns';
 import clsx from 'clsx';
 import HabitModal from '../components/habits/HabitModal';
 import { Habit } from '../types';
@@ -265,7 +265,11 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <PageHeader
         title="Dashboard"
-        subtitle={format(new Date(), 'EEEE, MMMM d, yyyy')}
+        subtitle={
+          todayData?.date
+            ? format(parseISO(todayData.date), 'EEEE, MMMM d, yyyy')
+            : format(new Date(), 'EEEE, MMMM d, yyyy')
+        }
         action={
           <Button icon={Plus} onClick={() => setIsModalOpen(true)}>
             New Habit
