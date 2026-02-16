@@ -47,3 +47,5 @@ temp/
 tmp/
 
 .planning/
+
+RELEASE_GUIDE.md
