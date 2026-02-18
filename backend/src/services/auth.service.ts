@@ -113,6 +113,7 @@ export async function register(data: RegisterInput): Promise<AuthResponse> {
       email: data.email,
       password: hashedPassword,
       name: data.name,
+      ...(data.timezone && { timezone: data.timezone }),
     },
   });
 
@@ -154,6 +155,16 @@ export async function login(data: LoginInput): Promise<AuthResponse> {
   }
 
   await clearFailedAttempts(data.email);
+
+  // Update timezone on each login to keep it current
+  if (data.timezone && data.timezone !== user.timezone) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { timezone: data.timezone },
+    });
+    user.timezone = data.timezone;
+  }
+
   const token = generateAccessToken(user.id);
   const refreshToken = await createRefreshToken(user.id);
 
