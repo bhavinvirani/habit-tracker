@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Shield, ShieldOff, Loader2 } from 'lucide-react';
+import { Shield, ShieldOff, Loader2, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminApi } from '../../services/admin';
 import { AdminUser } from '../../types';
 import { SearchInput, Badge, Button, ConfirmDialog } from '../ui';
+import UserDetailPanel from './UserDetailPanel';
 
 interface UsersTabProps {
   currentUserId: string;
@@ -16,6 +17,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ currentUserId }) => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [roleChangeTarget, setRoleChangeTarget] = useState<AdminUser | null>(null);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const handleSearchChange = useCallback((value: string) => {
@@ -80,12 +82,13 @@ const UsersTab: React.FC<UsersTabProps> = ({ currentUserId }) => {
       ) : (
         <div className="card p-0 overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[1fr_1fr_80px_80px_100px_100px] gap-4 px-4 py-3 border-b border-dark-700 bg-dark-800/50 text-xs font-medium text-dark-400 uppercase tracking-wider">
+          <div className="grid grid-cols-[1fr_1fr_80px_80px_100px_60px_100px] gap-4 px-4 py-3 border-b border-dark-700 bg-dark-800/50 text-xs font-medium text-dark-400 uppercase tracking-wider">
             <span>Name</span>
             <span>Email</span>
             <span className="text-center">Role</span>
             <span className="text-center">Habits</span>
             <span>Joined</span>
+            <span className="text-center">View</span>
             <span className="text-center">Action</span>
           </div>
 
@@ -95,7 +98,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ currentUserId }) => {
             return (
               <div
                 key={user.id}
-                className="grid grid-cols-[1fr_1fr_80px_80px_100px_100px] gap-4 px-4 py-3 border-b border-dark-700/50 last:border-b-0 items-center hover:bg-dark-700/20 transition-colors"
+                className="grid grid-cols-[1fr_1fr_80px_80px_100px_60px_100px] gap-4 px-4 py-3 border-b border-dark-700/50 last:border-b-0 items-center hover:bg-dark-700/20 transition-colors"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-7 h-7 rounded-full bg-primary-500/20 flex items-center justify-center flex-shrink-0">
@@ -115,6 +118,16 @@ const UsersTab: React.FC<UsersTabProps> = ({ currentUserId }) => {
                 <span className="text-xs text-dark-400">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </span>
+                <div className="text-center">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={Eye}
+                    iconOnly
+                    onClick={() => setDetailUserId(user.id)}
+                    title="View Details"
+                  />
+                </div>
                 <div className="text-center">
                   {isSelf ? (
                     <span className="text-xs text-dark-500">You</span>
@@ -159,6 +172,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ currentUserId }) => {
           </Button>
         </div>
       )}
+
+      <UserDetailPanel userId={detailUserId} onClose={() => setDetailUserId(null)} />
 
       <ConfirmDialog
         isOpen={!!roleChangeTarget}

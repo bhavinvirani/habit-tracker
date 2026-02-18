@@ -1,4 +1,4 @@
-interface CronJobEntry {
+export interface CronJobEntry {
   schedule: string;
   lastRun: string | null;
   lastStatus: 'success' | 'failure' | null;

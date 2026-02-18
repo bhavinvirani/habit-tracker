@@ -388,6 +388,271 @@ describe('Admin API', () => {
     });
   });
 
+  // ─── System Stats ─────────────────────────────────────────────
+
+  describe('GET /api/admin/stats/system', () => {
+    it('should return system stats for admin (200)', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/system')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.stats).toHaveProperty('application');
+      expect(res.body.data.stats).toHaveProperty('system');
+      expect(res.body.data.stats).toHaveProperty('cache');
+      expect(res.body.data.stats).toHaveProperty('requests');
+      expect(res.body.data.stats).toHaveProperty('errors');
+      expect(res.body.data.stats).toHaveProperty('dependencies');
+      expect(res.body.data.stats.application).toHaveProperty('uptime');
+      expect(res.body.data.stats.system).toHaveProperty('memory');
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/system')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── Trends ───────────────────────────────────────────────────
+
+  describe('GET /api/admin/stats/trends', () => {
+    it('should return trend data (200)', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/trends')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data.trends)).toBe(true);
+      if (res.body.data.trends.length > 0) {
+        expect(res.body.data.trends[0]).toHaveProperty('date');
+        expect(res.body.data.trends[0]).toHaveProperty('newUsers');
+        expect(res.body.data.trends[0]).toHaveProperty('activeUsers');
+        expect(res.body.data.trends[0]).toHaveProperty('completionRate');
+      }
+    });
+
+    it('should accept days query param', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/trends?days=7')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.trends.length).toBeLessThanOrEqual(8); // 7 days + today
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/trends')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── Content Breakdown ────────────────────────────────────────
+
+  describe('GET /api/admin/stats/content', () => {
+    it('should return content breakdown (200)', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/content')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.breakdown).toHaveProperty('habits');
+      expect(res.body.data.breakdown).toHaveProperty('books');
+      expect(res.body.data.breakdown).toHaveProperty('challenges');
+      expect(res.body.data.breakdown).toHaveProperty('engagement');
+      expect(res.body.data.breakdown.habits).toHaveProperty('byFrequency');
+      expect(res.body.data.breakdown.habits).toHaveProperty('byType');
+      expect(res.body.data.breakdown.habits).toHaveProperty('byCategory');
+      expect(res.body.data.breakdown.engagement).toHaveProperty('avgHabitsPerUser');
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .get('/api/admin/stats/content')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── User Detail ──────────────────────────────────────────────
+
+  describe('GET /api/admin/users/:id', () => {
+    it('should return user detail (200)', async () => {
+      if (!adminToken || !regularUserId) return;
+      const res = await request(app)
+        .get(`/api/admin/users/${regularUserId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.user).toHaveProperty('id');
+      expect(res.body.data.user).toHaveProperty('name');
+      expect(res.body.data.user).toHaveProperty('email');
+      expect(res.body.data.user).toHaveProperty('timezone');
+      expect(res.body.data.user).toHaveProperty('_count');
+      expect(res.body.data.user).toHaveProperty('habits');
+      expect(res.body.data.user).toHaveProperty('books');
+      expect(res.body.data.user).toHaveProperty('challenges');
+      expect(Array.isArray(res.body.data.user.habits)).toBe(true);
+    });
+
+    it('should return 404 for invalid user ID', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/users/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken || !regularUserId) return;
+      const res = await request(app)
+        .get(`/api/admin/users/${regularUserId}`)
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── Data Export ──────────────────────────────────────────────
+
+  describe('GET /api/admin/export/:type', () => {
+    it('should export users as CSV', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/export/users')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/csv');
+      expect(res.headers['content-disposition']).toContain('attachment');
+      expect(res.text).toContain('ID,Name,Email');
+    });
+
+    it('should export habits as CSV', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/export/habits')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/csv');
+    });
+
+    it('should export logs as CSV', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/export/logs')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('text/csv');
+    });
+
+    it('should return 400 for invalid export type', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/export/invalid')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .get('/api/admin/export/users')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  // ─── Session Management ───────────────────────────────────────
+
+  describe('GET /api/admin/sessions', () => {
+    it('should return active sessions (200)', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .get('/api/admin/sessions')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data.sessions)).toBe(true);
+      if (res.body.data.sessions.length > 0) {
+        expect(res.body.data.sessions[0]).toHaveProperty('id');
+        expect(res.body.data.sessions[0]).toHaveProperty('createdAt');
+        expect(res.body.data.sessions[0]).toHaveProperty('expiresAt');
+        expect(res.body.data.sessions[0]).toHaveProperty('user');
+      }
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .get('/api/admin/sessions')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('DELETE /api/admin/sessions/:id', () => {
+    it('should revoke a session', async () => {
+      if (!adminToken) return;
+      // First get sessions to find a valid ID
+      const listRes = await request(app)
+        .get('/api/admin/sessions')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      if (listRes.body.data.sessions.length === 0) return;
+
+      const sessionId = listRes.body.data.sessions[0].id;
+      const res = await request(app)
+        .delete(`/api/admin/sessions/${sessionId}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should return 404 for unknown session', async () => {
+      if (!adminToken) return;
+      const res = await request(app)
+        .delete('/api/admin/sessions/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should reject non-admin', async () => {
+      if (!userToken) return;
+      const res = await request(app)
+        .delete('/api/admin/sessions/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(403);
+    });
+  });
+
   // ─── Public Features Endpoint ─────────────────────────────────
 
   describe('GET /api/features', () => {
