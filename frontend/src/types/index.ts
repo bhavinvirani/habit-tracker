@@ -53,7 +53,50 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  isAdmin: boolean;
   createdAt: string;
+}
+
+// Feature Flags
+export interface FeatureFlag {
+  key: string;
+  name: string;
+  description: string | null;
+  category: string;
+  enabled: boolean;
+  metadata: Record<string, unknown> | null;
+  updatedAt: string;
+}
+
+// Weekly Report
+export interface PatternInsight {
+  insight: string;
+  habits: string[];
+  confidence: string;
+}
+
+export interface RiskInsight {
+  habit: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface OptimizationInsight {
+  suggestion: string;
+  habits: string[];
+  impact: string;
+}
+
+export interface WeeklyReport {
+  id: string;
+  userId: string;
+  patterns: PatternInsight[];
+  risks: RiskInsight[];
+  optimizations: OptimizationInsight[];
+  narrative: string;
+  periodStart: string;
+  periodEnd: string;
+  generatedAt: string;
 }
 
 export interface DashboardStats {

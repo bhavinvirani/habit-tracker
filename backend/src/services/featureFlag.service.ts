@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import logger from '../utils/logger';
 
@@ -45,7 +46,7 @@ class FeatureFlagService {
         description: reg.description ?? null,
         category: reg.category ?? 'general',
         enabled: reg.defaultEnabled ?? false,
-        metadata: reg.metadata ?? undefined,
+        metadata: (reg.metadata as Prisma.InputJsonValue) ?? undefined,
       },
     });
     await this.loadAll();
@@ -75,7 +76,10 @@ class FeatureFlagService {
   ): Promise<FeatureFlagData> {
     const flag = await prisma.featureFlag.update({
       where: { key },
-      data,
+      data: {
+        ...data,
+        metadata: data.metadata as Prisma.InputJsonValue | undefined,
+      },
     });
     await this.loadAll();
     return flag;

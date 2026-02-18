@@ -1,5 +1,6 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
-import { generateInsights, isAIConfigured, AIInsightsResult, HabitDataContext } from './ai.service';
+import { generateInsights, AIInsightsResult, HabitDataContext } from './ai.service';
 import { featureFlagService } from './featureFlag.service';
 import * as analyticsService from './analytics.service';
 import logger from '../utils/logger';
@@ -132,10 +133,6 @@ export async function generateReportsForAllUsers(): Promise<GenerationResult> {
     throw new BadRequestError('AI Insights feature is disabled');
   }
 
-  if (!isAIConfigured()) {
-    throw new BadRequestError('ANTHROPIC_API_KEY is not configured');
-  }
-
   const allUsers = await prisma.user.findMany({
     select: { id: true, name: true },
   });
@@ -163,17 +160,17 @@ export async function generateReportsForAllUsers(): Promise<GenerationResult> {
         where: { userId: user.id },
         create: {
           userId: user.id,
-          patterns: insights.patterns as unknown as Record<string, unknown>[],
-          risks: insights.risks as unknown as Record<string, unknown>[],
-          optimizations: insights.optimizations as unknown as Record<string, unknown>[],
+          patterns: insights.patterns as unknown as Prisma.InputJsonValue,
+          risks: insights.risks as unknown as Prisma.InputJsonValue,
+          optimizations: insights.optimizations as unknown as Prisma.InputJsonValue,
           narrative: insights.narrative,
           periodStart,
           periodEnd,
         },
         update: {
-          patterns: insights.patterns as unknown as Record<string, unknown>[],
-          risks: insights.risks as unknown as Record<string, unknown>[],
-          optimizations: insights.optimizations as unknown as Record<string, unknown>[],
+          patterns: insights.patterns as unknown as Prisma.InputJsonValue,
+          risks: insights.risks as unknown as Prisma.InputJsonValue,
+          optimizations: insights.optimizations as unknown as Prisma.InputJsonValue,
           narrative: insights.narrative,
           periodStart,
           periodEnd,

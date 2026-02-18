@@ -42,6 +42,8 @@ import {
   Badge,
 } from '../components/ui';
 import { ChartSkeleton } from '../components/ui/Skeleton';
+import { FeatureGate } from '../contexts/FeatureFlagContext';
+import AIInsightsSection from '../components/analytics/AIInsightsSection';
 
 // ── Heatmap helpers ───────────────────────────────────────────────
 
@@ -937,6 +939,13 @@ const Analytics: React.FC = () => {
           </div>
         </div>
       </FadeIn>
+
+      {/* ── AI Weekly Insights ── */}
+      <FeatureGate flag="ai_insights">
+        <FadeIn delay={0.38}>
+          <AIInsightsSection />
+        </FadeIn>
+      </FeatureGate>
 
       {/* ── 9. Insights ── */}
       <FadeIn delay={0.4}>

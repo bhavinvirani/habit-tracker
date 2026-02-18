@@ -11,7 +11,7 @@ export const getAllFeatureFlags = asyncHandler(async (_req: AuthRequest, res: Re
 });
 
 export const updateFeatureFlag = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { key } = req.params;
+  const key = req.params.key as string;
   const data = req.body as UpdateFeatureFlagInput;
   const flag = await featureFlagService.updateFlag(key, data);
   sendSuccess(res, { flag }, `Feature flag '${key}' updated successfully`);

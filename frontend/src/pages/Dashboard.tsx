@@ -37,6 +37,8 @@ import {
   DashboardSkeleton,
   QuickLogDialog,
 } from '../components/ui';
+import { FeatureGate } from '../contexts/FeatureFlagContext';
+import WeeklyInsightsCard from '../components/dashboard/WeeklyInsightsCard';
 
 const Dashboard: React.FC = () => {
   const queryClient = useQueryClient();
@@ -440,6 +442,11 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* AI Weekly Insights Card */}
+      <FeatureGate flag="ai_insights">
+        <WeeklyInsightsCard />
+      </FeatureGate>
 
       {/* Currently Reading Widget - Compact with Progress Bar */}
       <div className="card p-4">

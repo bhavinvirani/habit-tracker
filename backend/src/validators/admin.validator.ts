@@ -6,7 +6,7 @@ export const featureFlagKeyParamSchema = z.object({
 
 export const updateFeatureFlagSchema = z.object({
   enabled: z.boolean().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type UpdateFeatureFlagInput = z.infer<typeof updateFeatureFlagSchema>;
