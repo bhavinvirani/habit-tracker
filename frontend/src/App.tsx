@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/layout/Layout';
+import AuthLayout from './components/layout/AuthLayout';
 import { LoadingSpinner } from './components/ui';
 import { useAuthStore } from './store/authStore';
 import { restoreSession } from './services/api';
@@ -61,30 +62,24 @@ function App() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/" />
-            ) : (
+        <Route element={!isAuthenticated ? <AuthLayout /> : <Navigate to="/" />}>
+          <Route
+            path="/login"
+            element={
               <SuspensePage>
                 <Login />
               </SuspensePage>
-            )
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/" />
-            ) : (
+            }
+          />
+          <Route
+            path="/register"
+            element={
               <SuspensePage>
                 <Register />
               </SuspensePage>
-            )
-          }
-        />
+            }
+          />
+        </Route>
         <Route
           path="/docs/api"
           element={
