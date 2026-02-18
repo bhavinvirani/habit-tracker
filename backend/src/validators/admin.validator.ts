@@ -67,3 +67,27 @@ export const auditLogQuerySchema = z.object({
 });
 
 export type AuditLogQuery = z.infer<typeof auditLogQuerySchema>;
+
+export const trendsQuerySchema = z.object({
+  days: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 30))
+    .pipe(z.number().min(1).max(365)),
+});
+
+export type TrendsQuery = z.infer<typeof trendsQuerySchema>;
+
+export const exportParamSchema = z.object({
+  type: z.enum(['users', 'habits', 'logs']),
+});
+
+export type ExportParam = z.infer<typeof exportParamSchema>;
+
+export const sessionIdParamSchema = z.object({
+  id: z.string().uuid('Invalid session ID format'),
+});
+
+export const userIdOnlyParamSchema = z.object({
+  userId: z.string().uuid('Invalid user ID format'),
+});

@@ -1,8 +1,8 @@
 import React from 'react';
-import { LayoutDashboard, Flag, Users, FileText, LucideIcon } from 'lucide-react';
+import { LayoutDashboard, Flag, Users, FileText, Activity, LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 
-export type AdminTab = 'overview' | 'flags' | 'users' | 'reports';
+export type AdminTab = 'overview' | 'flags' | 'users' | 'reports' | 'system';
 
 interface Tab {
   id: AdminTab;
@@ -15,6 +15,7 @@ const tabs: Tab[] = [
   { id: 'flags', label: 'Feature Flags', icon: Flag },
   { id: 'users', label: 'Users', icon: Users },
   { id: 'reports', label: 'AI Reports', icon: FileText },
+  { id: 'system', label: 'System Health', icon: Activity },
 ];
 
 interface AdminTabNavProps {

@@ -1,7 +1,7 @@
 const MAX_RECENT_ERRORS = 50;
 const MAX_ERROR_CODES = 200;
 
-interface ErrorCodeEntry {
+export interface ErrorCodeEntry {
   count: number;
   lastOccurrence: string;
   lastMessage: string;
@@ -10,7 +10,7 @@ interface ErrorCodeEntry {
   lastMethod: string;
 }
 
-interface RecentError {
+export interface RecentError {
   code: string;
   message: string;
   url: string;

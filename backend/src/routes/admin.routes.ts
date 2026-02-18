@@ -11,6 +11,10 @@ import {
   updateUserRoleSchema,
   userIdParamSchema,
   auditLogQuerySchema,
+  trendsQuerySchema,
+  exportParamSchema,
+  sessionIdParamSchema,
+  userIdOnlyParamSchema,
 } from '../validators/admin.validator';
 import {
   getAllFeatureFlags,
@@ -22,6 +26,14 @@ import {
   listUsers,
   updateUserRole,
   getApplicationStats,
+  getSystemStats,
+  getTrends,
+  getContentBreakdown,
+  getUserDetail,
+  exportData,
+  getActiveSessions,
+  revokeSession,
+  revokeAllUserSessions,
 } from '../controllers/admin.controller';
 import { requireFeature } from '../middleware/featureGate';
 import { generateReports, getMyLatestReport } from '../controllers/report.controller';
@@ -100,9 +112,80 @@ router.patch(
   updateUserRole
 );
 
+// Admin-only — user detail
+router.get(
+  '/admin/users/:id',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readLimiter as any,
+  validateParams(userIdParamSchema),
+  getUserDetail
+);
+
 // Admin-only — application stats
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 router.get('/admin/stats', authenticate, requireAdmin, readLimiter as any, getApplicationStats);
+
+// Admin-only — system stats
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+router.get('/admin/stats/system', authenticate, requireAdmin, readLimiter as any, getSystemStats);
+
+// Admin-only — trends
+router.get(
+  '/admin/stats/trends',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readLimiter as any,
+  validateQuery(trendsQuerySchema),
+  getTrends
+);
+
+// Admin-only — content breakdown
+router.get(
+  '/admin/stats/content',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readLimiter as any,
+  getContentBreakdown
+);
+
+// Admin-only — data export
+router.get(
+  '/admin/export/:type',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readLimiter as any,
+  validateParams(exportParamSchema),
+  exportData
+);
+
+// Admin-only — session management
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+router.get('/admin/sessions', authenticate, requireAdmin, readLimiter as any, getActiveSessions);
+
+router.delete(
+  '/admin/sessions/user/:userId',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  writeLimiter as any,
+  validateParams(userIdOnlyParamSchema),
+  revokeAllUserSessions
+);
+
+router.delete(
+  '/admin/sessions/:id',
+  authenticate,
+  requireAdmin,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  writeLimiter as any,
+  validateParams(sessionIdParamSchema),
+  revokeSession
+);
 
 // Report generation (admin only, requires ai_insights feature)
 router.post(

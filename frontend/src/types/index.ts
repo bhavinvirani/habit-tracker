@@ -336,6 +336,181 @@ export interface StreakPrediction {
   riskReason: string | null;
 }
 
+// ─── Admin: System Stats ─────────────────────────────────────────
+
+export interface SystemStats {
+  application: {
+    name: string;
+    version: string;
+    environment: string;
+    nodeVersion: string;
+    uptime: { seconds: number; formatted: string };
+    startedAt: string;
+  };
+  system: {
+    memory: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+      external: number;
+      arrayBuffers: number;
+    };
+    cpu: { user: number; system: number };
+    platform: string;
+    arch: string;
+    pid: number;
+    loadAverage: { '1m': number; '5m': number; '15m': number };
+  };
+  database: Record<string, unknown>;
+  cache: {
+    hits: number;
+    misses: number;
+    sets: number;
+    invalidations: number;
+    hitRate: number;
+    backend: string;
+  };
+  requests: {
+    totalRequests: number;
+    activeRequests: number;
+    averageResponseTime: number;
+    byMethod: Record<string, number>;
+    byStatusGroup: Record<string, number>;
+  };
+  redis: Record<string, unknown>;
+  deployment: {
+    gitSha: string | null;
+    buildTimestamp: string | null;
+    dockerImage: string | null;
+    packageVersion: string;
+  };
+  errors: {
+    totalErrors: number;
+    byCode: Record<string, { count: number; lastMessage: string; statusCode: number }>;
+    recent: Array<{
+      code: string;
+      message: string;
+      url: string;
+      method: string;
+      timestamp: string;
+    }>;
+  };
+  cronJobs: Record<
+    string,
+    {
+      schedule: string;
+      lastRun: string | null;
+      lastStatus: string | null;
+      runCount: number;
+      failCount: number;
+    }
+  >;
+  rateLimiting: {
+    totalThrottled: number;
+    byLimiter: Record<string, number>;
+  };
+  activeUsers: {
+    dau: number;
+    wau: number;
+    mau: number;
+    totalRegistered: number;
+  };
+  dependencies: Record<string, { status: string; latencyMs: number }>;
+}
+
+// ─── Admin: Trends ───────────────────────────────────────────────
+
+export interface TrendPoint {
+  date: string;
+  newUsers: number;
+  activeUsers: number;
+  completionRate: number;
+}
+
+// ─── Admin: Content Breakdown ────────────────────────────────────
+
+export interface ContentBreakdown {
+  habits: {
+    byFrequency: Array<{ frequency: string; count: number }>;
+    byType: Array<{ type: string; count: number }>;
+    byCategory: Array<{ category: string; count: number }>;
+  };
+  books: {
+    byStatus: Array<{ status: string; count: number }>;
+  };
+  challenges: {
+    byStatus: Array<{ status: string; count: number }>;
+  };
+  engagement: {
+    avgHabitsPerUser: number;
+    avgCompletionRate: number;
+    avgStreakLength: number;
+    usersWithActiveHabits: number;
+    totalUsers: number;
+  };
+}
+
+// ─── Admin: User Detail ──────────────────────────────────────────
+
+export interface AdminUserDetail {
+  id: string;
+  name: string;
+  email: string;
+  isAdmin: boolean;
+  timezone: string;
+  createdAt: string;
+  _count: {
+    habits: number;
+    habitLogs: number;
+    milestones: number;
+    books: number;
+    challenges: number;
+  };
+  habits: Array<{
+    id: string;
+    name: string;
+    color: string;
+    frequency: string;
+    habitType: string;
+    isActive: boolean;
+    isArchived: boolean;
+    currentStreak: number;
+    longestStreak: number;
+    totalCompletions: number;
+    createdAt: string;
+  }>;
+  books: Array<{
+    id: string;
+    title: string;
+    author: string | null;
+    status: string;
+    rating: number | null;
+    createdAt: string;
+  }>;
+  challenges: Array<{
+    id: string;
+    name: string;
+    status: string;
+    duration: number;
+    completionRate: number | null;
+    startDate: string;
+    endDate: string;
+  }>;
+}
+
+// ─── Admin: Sessions ─────────────────────────────────────────────
+
+export interface AdminSession {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 // Axios Error type
 export interface ApiError {
   response?: {

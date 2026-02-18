@@ -8,6 +8,7 @@ import OverviewTab from '../components/admin/OverviewTab';
 import FeatureFlagsTab from '../components/admin/FeatureFlagsTab';
 import UsersTab from '../components/admin/UsersTab';
 import ReportsTab from '../components/admin/ReportsTab';
+import SystemHealthTab from '../components/admin/SystemHealthTab';
 
 const Admin: React.FC = () => {
   const { user } = useAuthStore();
@@ -29,6 +30,7 @@ const Admin: React.FC = () => {
       {activeTab === 'flags' && <FeatureFlagsTab />}
       {activeTab === 'users' && <UsersTab currentUserId={user.id} />}
       {activeTab === 'reports' && <ReportsTab />}
+      {activeTab === 'system' && <SystemHealthTab />}
     </div>
   );
 };
