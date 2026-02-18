@@ -20,6 +20,7 @@ export interface SafeUser {
   email: string;
   name: string;
   timezone: string;
+  isAdmin: boolean;
   createdAt: Date;
 }
 
@@ -76,6 +77,7 @@ function toSafeUser(user: User): SafeUser {
     email: user.email,
     name: user.name,
     timezone: user.timezone,
+    isAdmin: user.isAdmin,
     createdAt: user.createdAt,
   };
 }
